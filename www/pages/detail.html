@@ -1,0 +1,78 @@
+<template>
+  <div class="page">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner sliding">
+				<div class="left">
+					<a href="#" class="link back">
+						<i class="icon icon-back"></i>
+						<span class="if-not-md">戻る</span>
+					</a>
+				</div>
+					<div class="title">${entry.title}</div>
+      </div>
+    </div>
+    <div class="page-content">
+			<div class="card">
+        <div style="background-image:url(${entry.thumbnail})"
+          class="card-header align-items-flex-end">
+					<div class="header-text">${entry.title}</div>
+				</div>
+        <div class="card-content card-content-padding">
+          <p class="date">${moment(entry.pubDate).format('lll')}</p>
+          <p>${viewText(entry.description)}</p>
+        </div>
+        <div class="card-footer">
+					<a href="#" class="link" @click=${() => { window.open(entry.link, '_system')}}>
+						<i class="f7-icons">globe</i>
+					</a>
+				</div>
+      </div>
+		</div>
+  </div>
+</template>
+<style>
+	.page-content .card-header {
+		height: 200px;
+	}
+	.page-content .card-header::before {
+	  content: '';
+	  background-color: rgba(0, 0, 0, 0.8);
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  width: 100%;
+	  height: 100%;
+	  display: block;
+	}
+	.page-content .card-header .header-text {
+		z-index: 100;
+		color: white;
+	}
+</style>
+<script>
+  export default function (props, {$f7, $f7route, $router, $update, $onMounted }) {
+    // NCMBが初期化されているかチェックします
+    if (typeof ncmb === 'undefined') throw 'NCMBが初期化されていません';
+    if (typeof moment === 'undefined') throw 'Momentが読み込まれていません';
+
+		let { objectId, entry } = props;
+		if (!entry) entry = {};
+		$onMounted(async () => {
+			if (entry.objectId) return;
+			entry = await ncmb
+				.DataStore('Entry')
+				.equalTo('objectId', objectId)
+				.fetch();
+			$update();
+		});
+
+		const viewText = (html) => {
+			const tmp = document.implementation.createHTMLDocument("New").body;
+			tmp.innerHTML = html;
+			return (tmp.textContent || tmp.innerText || "").split('').slice(0, 300).join('');
+		};
+
+    return $render;
+  }
+</script>
