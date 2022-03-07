@@ -1,0 +1,112 @@
+<template>
+  <div class="page">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner sliding">
+        <div class="left">
+          <a href="#" class="link back">
+            <i class="icon icon-back"></i>
+            <span class="if-not-md">戻る</span>
+          </a>
+        </div>
+        <div class="title">フォトギャラリー</div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="block gallery">
+        <div class="row no-gap">
+          ${ photos.map(photo => $h`
+            <div class="col-25">
+              <img src="${photo}" class="photo" @load=${load} @click=${show} />
+            </div>
+          `)}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<style>
+  .gallery {
+    display: none;
+  }
+  .photo {
+    width: 100%;
+    object-fit: cover;
+  }
+</style>
+<script>
+  export default function (props, {$f7, $onMounted, $update, $f7router, $on}) {
+    console.log($f7router);
+    const prefix = `${props.name}`; // 表示対象のファイル名（前方一致）
+    const appId = 'MKpbJPxaTIU5m1nW'; // アプリID
+    const blankPhoto = '/assets/images/blank.png'; // グリッドで余った部分の埋め合わせよう画像のパス
+    const photos = []; // 取得した画像のURLを入れる変数
+    let browser; // フォトブラウザオブジェクト
+    let loadCount = 0; // 読み込み完了した画像の数
+    $onMounted(async () => {
+      reset();
+      // ローディングアイコンを表示
+      app.preloader.show();
+      // 写真を取得します
+      const files = await getPhotos();
+      // ファイルを写真に変換します
+      fileToPhoto(files);
+      // フォトブラウザオブジェクトを作成します
+      browser = $f7.photoBrowser.create({
+        photos: photos.filter(photo => photo !== blankPhoto)
+      });
+      // 表示を更新
+      $update();
+      // ローディングを消します
+      app.preloader.hide();
+    });
+
+    const reset = () => {
+      // ギャラリーを一度非表示にします
+      $('.gallery').hide();
+      // 読み込み完了画像カウントのリセット
+      loadCount = 0;
+    }
+
+    // ファイルを写真に変換します
+    const fileToPhoto = (files) => {
+      // 写真のファイル名から公開アクセス用URLに変換します
+      files.forEach(file => {
+        photos.push(`https://mbaas.api.nifcloud.com/2013-09-01/applications/${appId}/publicFiles/${file.fileName}`)
+      });
+      // グリッドの足りない分を空白の写真で埋め合わせます
+      for (let i = 0; i < files.length % 4; i++) {
+        photos.push(blankPhoto);
+      }
+    }
+
+    // 画像が読み込まれると呼ばれる関数です
+    const load = (e) => {
+      // 読み込み完了画像のカウンターを1上げます
+      loadCount += 1;
+      // 全画像が読み込み終わるまで待ちます
+      if (loadCount < photos.length) return;
+      // 画像の幅を取得
+      const width = $('.photo').width();
+      // 全画像の高さを幅と同じ（正方形）にします
+      $('.photo').css('height', `${width}px`);
+      // ギャラリーを表示します
+      $('.gallery').show();
+    };
+
+    const show = (e) => {
+      const photo = $(e.target).attr('src');
+      const index = photos.indexOf(photo);
+      if (photo === blankPhoto) return;
+      browser.open(index);
+    }
+
+    const getPhotos = () => {
+      return ncmb.File
+        .regularExpressionTo('fileName', `${prefix}.*`)
+        .limit(100)
+        .fetchAll();
+    }
+    return $render;
+  }
+</script>

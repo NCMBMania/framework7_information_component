@@ -1,0 +1,65 @@
+<template>
+  <div class="page">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner sliding">
+        <div class="title">情報</div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="list">
+        <ul>
+          ${entries.map(entry => $h`
+            <li>
+              <a href="#" class="item-link item-content" @click=${() => moveDetail(entry)}>
+                <div class="item-media">
+                  ${ iconType(entry.icon) === 'framework7' ?
+                    $h`<i class="f7-icons" style="color: ${entry.color};">${entry.icon}</i>`
+                    :
+                    $h`<span class="icon-${entry.icon}" style="color: ${entry.color};"></span>`
+                  }
+                </div>
+                <div class="item-inner">
+                  <div class="item-title">${entry.label}</div>
+                </div>
+              </a>
+            </li>
+          `)}
+        </ul>
+      </div>
+    </div>
+  </div>
+</template>
+<style>
+  .item-media span {
+    font-size: 28px;
+  }
+</style>
+<script>
+  export default function (props, { $f7, $f7route, $f7router, $update, $onMounted }) {
+    // NCMBが初期化されているかチェックします
+    if (typeof ncmb === 'undefined') throw 'NCMBが初期化されていません';
+    let entries = [];
+    $onMounted(async () => {
+      entries = await getInformation();
+      $update();
+    });
+
+    const getInformation = () => {
+      return ncmb.DataStore('Information').limit(100).fetchAll();
+    }
+
+    const moveDetail = (entry) => {
+      if (entry.path.match(/https?:\/\//)) {
+        window.open(entry.path, "_blank");
+      } else {
+        $f7router.navigate(entry.path);
+      }
+    }
+
+    const iconType = (name) => {
+      return ['line', 'hatebu', 'feedly'].indexOf(name) > -1 ? 'original' : 'framework7';
+    };
+    return $render;
+  }
+</script>

@@ -4,12 +4,12 @@ const routes = [
     url: './index.html',
   },
   {
-    path: '/list/entries/:objectId',
-    componentUrl: './pages/detail.html',
+    path: '/gallery/:name',
+    componentUrl: './pages/gallery.html',
   },
   {
-    path: '/list/:objectId',
-    componentUrl: './pages/list.html',
+    path: '/information',
+    componentUrl: './pages/information.html',
   },
   {
     path: '(.*)',
